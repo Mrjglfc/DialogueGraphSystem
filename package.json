@@ -1,0 +1,16 @@
+{
+  "name": "com.mrjglfc.dialoguegraphsystem",
+  "version": "0.0.1",
+  "displayName": "DialogueGraphSystem",
+  "description": "A node-based dialogue creation tool built using Unity's Graph ToolKit.",
+  "keywords": [
+    "Dialogue",
+    "Graph",
+    "Graph ToolKit"
+  ],
+  "author": {
+    "name": "Jordan Gough",
+    "email": "jgoughbusiness@hotmail.com",
+    "url": "https://jgoughportfolio.weebly.com/"
+  }
+}

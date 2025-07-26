@@ -1,0 +1,18 @@
+{
+    "name": "Mrjglfc.DialogueGraphSystem.Editor",
+    "rootNamespace": "Mrjglfc.DialogueGraphSystem.Editor",
+    "references": [
+        "GUID:70ef9a24f4cfc4aec911c1414e3f90ad",
+        "GUID:d1e08c06f8f9473888c892637c83c913",
+        "GUID:473902f42f217c645b9ed610faf1dad0"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
