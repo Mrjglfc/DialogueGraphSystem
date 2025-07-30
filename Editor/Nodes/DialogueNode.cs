@@ -4,7 +4,7 @@ using Unity.GraphToolkit.Editor;
 namespace Mrjglfc.DialogueGraphSystem.Editor
 {
     /// <summary>
-    /// Visual Novel Director Base Node model.
+    /// Dialogue Base Node model.
     /// </summary>
     /// <remarks> It is best practice to group all the nodes of a tool under a base node. It improves organization,
     /// scalability, maintenance and debugging.</remarks>

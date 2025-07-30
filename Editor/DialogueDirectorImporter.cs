@@ -11,25 +11,25 @@ using UnityEngine;
 namespace Mrjglfc.DialogueGraphSystem.Editor
 {
     /// <summary>
-    /// VisualNovelDirectorImporter is a <see cref="ScriptedImporter"/> that imports the <see cref="VisualNovelDirectorGraph"/>
-    /// and builds the corresponding <see cref="VisualNovelRuntimeGraph"/>.
+    /// DialogueDirectorImporter is a <see cref="ScriptedImporter"/> that imports the <see cref="DialogueGraph"/>
+    /// and builds the corresponding <see cref="DialogueRuntimeGraph"/>.
     /// </summary>
     [ScriptedImporter(1, DialogueGraph.AssetExtension)]
     internal class DialogueDirectorImporter : ScriptedImporter
     {
         /// <summary>
-        /// Unity calls this method when the editor imports the asset. This method then processes the imported <see cref="VisualNovelDirectorGraph"/>.
+        /// Unity calls this method when the editor imports the asset. This method then processes the imported <see cref="DialogueGraph"/>.
         /// </summary>
         /// <param name="ctx">The asset import context.</param>
         public override void OnImportAsset(AssetImportContext ctx)
         {
-            var graph = GraphDatabase.LoadGraphForImporter<DialogueGraph>(ctx.assetPath);
+            DialogueGraph graph = GraphDatabase.LoadGraphForImporter<DialogueGraph>(ctx.assetPath);
 
             // The `graph` may be null if the `GraphDatabase.LoadGraphForImporter` method
             // fails to load the asset from the specified `ctx.assetPath`.
             // This can occur under the following circumstances:
             // - The asset path is incorrect, or the asset does not exist at the specified location.
-            // - The asset located at the specified path is not of type `VisualNovelDirectorGraph`.
+            // - The asset located at the specified path is not of type `DialogueGraph`.
             // - The asset file itself is problematic. For example, it is corrupted, or stored in an unsupported format.
             //
             // Best practice to deal with serialization is to thoroughly validate and safeguard against
@@ -42,20 +42,20 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
 
             // Get the first Start Node
             // (Only using the first node is a simplification we made for this sample)
-            var startNodeModel = graph.GetNodes().OfType<StartNode>().FirstOrDefault();
+            StartNode startNodeModel = graph.GetNodes().OfType<StartNode>().FirstOrDefault();
             if (startNodeModel == null)
             {
-                // No need to log an error here, as the VisualNovelDirectorGraphProcessor is already logging an error in the console
-                // See VisualNovelDirectorGraph.CheckGraphErrors(GraphLogger).
+                // No need to log an error here, as the DialogueGraphProcessor is already logging an error in the console
+                // See DialogueGraph.CheckGraphErrors(GraphLogger).
                 return;
             }
 
             // Build the runtime asset by walking the graph and adding the relevant nodes.
-            var runtimeAsset = ScriptableObject.CreateInstance<DialogueRuntimeGraph>();
-            var nextNodeModel = GetNextNode(startNodeModel);
+            DialogueRuntimeGraph runtimeAsset = ScriptableObject.CreateInstance<DialogueRuntimeGraph>();
+            INode nextNodeModel = GetNextNode(startNodeModel);
             while (nextNodeModel != null)
             {
-                var runtimeNodes = TranslateNodeModelToRuntimeNodes(nextNodeModel);
+                List<DialogueRuntimeNode> runtimeNodes = TranslateNodeModelToRuntimeNodes(nextNodeModel);
                 runtimeAsset.Nodes.AddRange(runtimeNodes);
 
                 nextNodeModel = GetNextNode(nextNodeModel);
@@ -63,7 +63,6 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
 
             // Add the runtime object to the graph asset and set it to be the main asset.
             // This allows the same asset to be used in inspectors wherever a runtime asset is expected.
-            // Refer to the BasicVisualNovelCanvas.prefab for an example of this.
             ctx.AddObjectToAsset("RuntimeAsset", runtimeAsset);
             ctx.SetMainObject(runtimeAsset);
         }
@@ -75,26 +74,26 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
         /// <returns>The next node in the graph</returns>
         static INode GetNextNode(INode currentNode)
         {
-            var outputPort = currentNode.GetOutputPortByName(DialogueNode.EXECUTION_PORT_DEFAULT_NAME);
-            var nextNodePort = outputPort.firstConnectedPort;
-            var nextNode = nextNodePort?.GetNode();
+            IPort outputPort = currentNode.GetOutputPortByName(DialogueNode.EXECUTION_PORT_DEFAULT_NAME);
+            IPort nextNodePort = outputPort.firstConnectedPort;
+            INode nextNode = nextNodePort?.GetNode();
 
             return nextNode;
         }
 
         /// <summary>
-        /// Converts a <see cref="VisualNovelNode"/> to a list of one or more runtime <see cref="VisualNovelRuntimeNode"/>s.
+        /// Converts a <see cref="DialogueNode"/> to a list of one or more runtime <see cref="DialogueRuntimeNode"/>s.
         /// </summary>
-        /// <param name="nodeModel">The <see cref="VisualNovelNode"/> to convert.</param>
+        /// <param name="nodeModel">The <see cref="DialogueNode"/> to convert.</param>
         /// <returns>
-        /// A list of <see cref="VisualNovelRuntimeNode"/>s that represent the runtime behavior of the input node.
-        /// Multiple runtime nodes may be generated from a single input <see cref="VisualNovelNode"/>.
+        /// A list of <see cref="DialogueRuntimeNode"/>s that represent the runtime behavior of the input node.
+        /// Multiple runtime nodes may be generated from a single input <see cref="DialogueNode"/>.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// Thrown if the <see cref="NodeModel"/> passed in is unsupported and cannot be converted.
         /// </exception>
         /// <remarks>
-        /// This conversion is not always 1:1. For example: the <see cref="SetDialogueNode"/> node is converted to
+        /// This conversion is not always 1:1. For example: the <see cref="SetSpeakerNode"/> node is converted to
         /// a <see cref="SetDialogueRuntimeNode"/> and a <see cref="WaitForInputRuntimeNode"/>. This is so that the
         /// runtime pauses execution and waits for player input after a dialogue is displayed. This approach allows
         /// more complex behaviour to be composed of multiple simpler runtime nodes.
@@ -158,10 +157,10 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
                 switch (port.firstConnectedPort.GetNode())
                 {
                     case IVariableNode variableNode:
-                        variableNode.variable.TryGetDefaultValue<T>(out value);
+                        variableNode.variable.TryGetDefaultValue(out value);
                         return value;
                     case IConstantNode constantNode:
-                        constantNode.TryGetValue<T>(out value);
+                        constantNode.TryGetValue(out value);
                         return value;
                     default:
                         break;
@@ -169,8 +168,6 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
             }
             else
             {
-                // If port has embedded value, return it.
-                // Otherwise, return the default value of the port
                 port.TryGetValue(out value);
             }
 
