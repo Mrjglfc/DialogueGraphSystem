@@ -1,6 +1,7 @@
 using System;
 using Unity.GraphToolkit.Editor;
 using UnityEngine;
+using Mrjglfc.DialogueGraphSystem.Runtime;
 
 namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
 {
@@ -18,24 +19,11 @@ namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
             context.AddNodeOption<Sprite>(m_CharacterSprite, "Character Sprite");
             context.AddNodeOption<CharacterSpritePosition>(m_SpriteLocation, "Sprite Location");
             context.AddNodeOption<string>(m_Dialogue, "Dialogue");
-
         }
 
         protected override void OnDefinePorts(IPortDefinitionContext context)
         {
             AddInputOutputExecutionPorts(context);
         }
-    }
-
-    public enum CharacterName
-    {
-        Bob, 
-        Jim
-    }
-
-    public enum CharacterSpritePosition
-    {
-        Left,
-        Right
     }
 }

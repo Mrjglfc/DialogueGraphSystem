@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Mrjglfc.DialogueGraphSystem.Runtime
 {
     public enum CharacterName
@@ -12,5 +10,11 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
     {
         Left,
         Right
+    }
+
+    public enum ActionType
+    {
+        Money,
+        Reputation
     }
 }
