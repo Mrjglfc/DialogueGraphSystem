@@ -2,6 +2,7 @@ using Mrjglfc.DialogueGraphSystem.Editor.Nodes;
 using Mrjglfc.DialogueGraphSystem.Runtime;
 using Mrjglfc.DialogueGraphSystem.Runtime.Nodes;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.GraphToolkit.Editor;
@@ -41,44 +42,21 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
             }
 
             // Get the first Start Node
-            // (Only using the first node is a simplification we made for this sample)
             StartNode startNodeModel = graph.GetNodes().OfType<StartNode>().FirstOrDefault();
             if (startNodeModel == null)
             {
                 // No need to log an error here, as the DialogueGraphProcessor is already logging an error in the console
-                // See DialogueGraph.CheckGraphErrors(GraphLogger).
                 return;
             }
 
             // Build the runtime asset by walking the graph and adding the relevant nodes.
             DialogueRuntimeGraph runtimeAsset = ScriptableObject.CreateInstance<DialogueRuntimeGraph>();
-            INode nextNodeModel = GetNextNode(startNodeModel);
-            while (nextNodeModel != null)
-            {
-                List<DialogueRuntimeNode> runtimeNodes = TranslateNodeModelToRuntimeNodes(nextNodeModel);
-                runtimeAsset.Nodes.AddRange(runtimeNodes);
-
-                nextNodeModel = GetNextNode(nextNodeModel);
-            }
+            DFSIterative(runtimeAsset, startNodeModel);
 
             // Add the runtime object to the graph asset and set it to be the main asset.
             // This allows the same asset to be used in inspectors wherever a runtime asset is expected.
             ctx.AddObjectToAsset("RuntimeAsset", runtimeAsset);
             ctx.SetMainObject(runtimeAsset);
-        }
-
-        /// <summary>
-        /// Gets the node that is executed after the given node.
-        /// </summary>
-        /// <param name="currentNode">The current node</param>
-        /// <returns>The next node in the graph</returns>
-        static INode GetNextNode(INode currentNode)
-        {
-            IPort outputPort = currentNode.GetOutputPortByName(DialogueNode.EXECUTION_PORT_DEFAULT_NAME);
-            IPort nextNodePort = outputPort.firstConnectedPort;
-            INode nextNode = nextNodePort?.GetNode();
-
-            return nextNode;
         }
 
         /// <summary>
@@ -99,79 +77,107 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
         /// more complex behaviour to be composed of multiple simpler runtime nodes.
         /// <br/><br/>
         /// </remarks>
-        static List<DialogueRuntimeNode> TranslateNodeModelToRuntimeNodes(INode nodeModel)
+        static DialogueRuntimeNode TranslateNodeModelToRuntimeNodes(INode nodeModel)
         {
-            List<DialogueRuntimeNode> returnedNodes = new();
             switch (nodeModel)
             {
-                case SetBackgroundNode setBackgroundNodeModel:
-                    returnedNodes.Add(new SetBackgroundRuntimeNode
-                    {
-                        BackgroundSprite = GetInputPortValue<Sprite>(setBackgroundNodeModel.GetInputPortByName(SetBackgroundNode.m_BackgroundName))
-                    });
+                case StartNode:
+                    return new StartRuntimeNode();
 
-                    // Note: We deliberately don't add a WaitForInputRuntimeNode here to enable updating multiple
-                    // visual novel elements (the background, music, dialogue, etc) all at once. This creates a seamless
-                    // transition involving more than one element.
-                    break;
+                case SetBackgroundNode setBackgroundNodeModel:
+                    return new SetBackgroundRuntimeNode
+                    {
+                        BackgroundSprite = GetNodeOptionValue<Sprite>(setBackgroundNodeModel.GetNodeOptionByName(SetBackgroundNode.m_BackgroundName))
+                    };
 
                 case SetSpeakerNode setSpeakerNodeModel:
-                    returnedNodes.Add(new SetDialogueRuntimeNode
+                    return new SetDialogueRuntimeNode
                     {
-                        ActorName = GetInputPortValue<string>(setSpeakerNodeModel.GetInputPortByName(SetSpeakerNode.m_CharacterName)),
-                        ActorSprite = GetInputPortValue<Sprite>(setSpeakerNodeModel.GetInputPortByName(SetSpeakerNode.m_CharacterSprite)),
-                        DialogueText = GetInputPortValue<string>(setSpeakerNodeModel.GetInputPortByName(SetSpeakerNode.m_Dialogue))
-                    });
-
-                    // Insert a WaitForInputNode after dialogue to create the expected visual novel behaviour.
-                    // This ensures narrative flow pauses until the player signals readiness to continue.
-                    returnedNodes.Add(new WaitForInputRuntimeNode());
-                    break;
+                        ActorName = GetNodeOptionValue<string>(setSpeakerNodeModel.GetNodeOptionByName(SetSpeakerNode.m_CharacterName)),
+                        ActorSprite = GetNodeOptionValue<Sprite>(setSpeakerNodeModel.GetNodeOptionByName(SetSpeakerNode.m_CharacterSprite)),
+                        DialogueText = GetNodeOptionValue<string>(setSpeakerNodeModel.GetNodeOptionByName(SetSpeakerNode.m_Dialogue))
+                    };
 
                 case WaitForInputNode _:
-                    returnedNodes.Add(new WaitForInputRuntimeNode());
-                    break;
+                    return new WaitForInputRuntimeNode();
+
+                case ChoiceNode choiceNode:
+                    choiceNode.GetNodeOptionByName(ChoiceNode.m_ChoiceCount).TryGetValue(out int choiceCount);
+                    string[] dialogueChoices = new string[choiceCount];
+
+                    for (int i = 0; i < choiceCount; i++)
+                    {
+                        choiceNode.GetOutputPortByName($"Choice {i}").TryGetValue(out string choice);
+                        dialogueChoices[i] = choice;
+                    }
+
+                    return new ChoiceRuntimeNode
+                    {
+                        dialogueOptions = dialogueChoices
+                    };
+
+                case EndNode:
+                    return new EndRuntimeNode();
 
                 default:
                     throw new ArgumentException($"Unsupported node model type: {nodeModel.GetType()}");
             }
-
-            return returnedNodes;
         }
 
-        /// <summary>
-        /// Gets the value of an input port on a node.
-        /// <br/><br/>
-        /// The value is obtained from (in priority order):<br/>
-        /// 1. Connections to the port (variable nodes, constant nodes, wire portals)<br/>
-        /// 2. Embedded value on the port<br/>
-        /// 3. Default value of the port<br/>
-        /// </summary>
-        static T GetInputPortValue<T>(IPort port)
+        static T GetNodeOptionValue<T>(INodeOption option)
         {
-            T value = default;
+            option.TryGetValue(out T value);
+            return value;
+        }
 
-            // If port is connected to another node, get value from connection
-            if (port.isConnected)
+        // Iterative DFS (using Stack)
+        void DFSIterative(DialogueRuntimeGraph graph, DialogueNode startNode)
+        {
+            var visited = new HashSet<DialogueRuntimeNode>();
+            var runtimeStack = new Stack<DialogueRuntimeNode>();
+            var editorStack = new Stack<DialogueNode>();
+
+            DialogueRuntimeNode startRuntimeNode = TranslateNodeModelToRuntimeNodes(startNode);
+            runtimeStack.Push(startRuntimeNode);
+            editorStack.Push(startNode);
+            DialogueRuntimeNode previousRuntimeNode = startRuntimeNode;
+            DialogueNode previousEditorNode = startNode;
+
+            while (runtimeStack.Count > 0)
             {
-                switch (port.firstConnectedPort.GetNode())
+                DialogueRuntimeNode currentRuntimeNode = runtimeStack.Pop();
+                DialogueNode currentEditorNode = editorStack.Pop();
+
+                if (currentRuntimeNode != null && !visited.Contains(currentRuntimeNode))
                 {
-                    case IVariableNode variableNode:
-                        variableNode.variable.TryGetDefaultValue(out value);
-                        return value;
-                    case IConstantNode constantNode:
-                        constantNode.TryGetValue(out value);
-                        return value;
-                    default:
-                        break;
+                    visited.Add(currentRuntimeNode);
+
+                    Debug.Log($"DFS Graph Import: Adding node - {currentRuntimeNode} to graph");
+                    graph.Graph.AddNode(currentRuntimeNode);
+
+                    if (currentRuntimeNode is not StartRuntimeNode)
+                    {
+                        graph.Graph.AddEdge(previousRuntimeNode, currentRuntimeNode);
+                    }
+
+                    previousRuntimeNode = currentRuntimeNode;
+
+                    if (currentEditorNode is EndNode || currentEditorNode == null) continue;
+                    foreach (IPort outputPort in currentEditorNode.GetOutputPorts())
+                    {
+                        INode connectedNode = outputPort.firstConnectedPort.GetNode();
+
+                        if (connectedNode == null) continue;
+                        DialogueRuntimeNode returnedNode = TranslateNodeModelToRuntimeNodes(connectedNode);
+
+                        if (!visited.Contains(returnedNode))
+                        {
+                            runtimeStack.Push(returnedNode);
+                            editorStack.Push(connectedNode as DialogueNode);
+                        }
+                    }
                 }
             }
-            else
-            {
-                port.TryGetValue(out value);
-            }
-
-            return value;
         }
     }
 }

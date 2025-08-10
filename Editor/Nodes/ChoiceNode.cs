@@ -7,7 +7,7 @@ namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
     [Serializable]
     internal class ChoiceNode : DialogueNode
     {
-        const string m_ChoiceCount = "ChoiceCount";
+        internal const string m_ChoiceCount = "ChoiceCount";
 
         protected override void OnDefineOptions(INodeOptionDefinition context)
         {
@@ -16,13 +16,14 @@ namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
 
         protected override void OnDefinePorts(IPortDefinitionContext context)
         {
-            context.AddInputPort("result").Build();
+            AddInputExecutionPort(context);
 
             INodeOption portCountOption = GetNodeOptionByName(m_ChoiceCount);
             portCountOption.TryGetValue(out int portCount);
             for (int i = 0; i < portCount; i++)
             {
-                context.AddOutputPort($"{i}").Build();
+                context.AddInputPort<string>($"Dialogue {i}").Build();
+                context.AddOutputPort($"Choice {i}").Build();
             }
         }
     }

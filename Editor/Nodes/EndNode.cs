@@ -3,11 +3,11 @@
 namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
 {
     [Serializable]
-    internal class StartNode : DialogueNode
+    internal class EndNode : DialogueNode
     {
         protected override void OnDefinePorts(IPortDefinitionContext context)
         {
-            AddOutputExecutionPort(context);
+            AddInputExecutionPort(context);
         }
     }
 }

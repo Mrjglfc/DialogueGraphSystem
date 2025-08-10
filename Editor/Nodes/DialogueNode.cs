@@ -19,15 +19,24 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
         /// <param name="scope">The scope to define the node.</param>
         protected void AddInputOutputExecutionPorts(IPortDefinitionContext context)
         {
-            context.AddInputPort(EXECUTION_PORT_DEFAULT_NAME)
-                .WithDisplayName(string.Empty)
-                .WithConnectorUI(PortConnectorUI.Arrowhead)
-                .Build();
+            AddInputExecutionPort(context);
+            AddOutputExecutionPort(context);
+        }
 
+        protected static void AddOutputExecutionPort(IPortDefinitionContext context)
+        {
             context.AddOutputPort(EXECUTION_PORT_DEFAULT_NAME)
-                .WithDisplayName(string.Empty)
-                .WithConnectorUI(PortConnectorUI.Arrowhead)
-                .Build();
+                   .WithDisplayName(string.Empty)
+                   .WithConnectorUI(PortConnectorUI.Arrowhead)
+                   .Build();
+        }
+
+        protected static void AddInputExecutionPort(IPortDefinitionContext context)
+        {
+            context.AddInputPort(EXECUTION_PORT_DEFAULT_NAME)
+                   .WithDisplayName(string.Empty)
+                   .WithConnectorUI(PortConnectorUI.Arrowhead)
+                   .Build();
         }
     }
 }

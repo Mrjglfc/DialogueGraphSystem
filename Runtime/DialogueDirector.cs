@@ -34,12 +34,12 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
         private async void Start()
         {
             // Create each executor once
-            var setBackgroundExecutor = new SetBackgroundExecutor();
-            var setDialogueExecutor = new SetDialogueExecutor();
-            var waitForInputExecutor = new WaitForInputExecutor();
+            SetBackgroundExecutor setBackgroundExecutor = new SetBackgroundExecutor();
+            SetDialogueExecutor setDialogueExecutor = new SetDialogueExecutor();
+            WaitForInputExecutor waitForInputExecutor = new WaitForInputExecutor();
 
             // Execute each node in the runtime graph sequentially
-            foreach (var node in RuntimeGraph.Nodes)
+            foreach (DialogueRuntimeNode node in RuntimeGraph.Nodes)
             {
                 switch (node)
                 {

@@ -29,18 +29,28 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
         void CheckGraphErrors(GraphLogger infos)
         {
             List<StartNode> startNodes = GetNodes().OfType<StartNode>().ToList();
+            List<EndNode> endNodes = GetNodes().OfType<EndNode>().ToList();
 
             switch (startNodes.Count)
             {
                 case 0:
-                    infos.LogError("Add a StartNode in your Visual Novel graph.", this);
+                    infos.LogError("Add a StartNode in your DialogueGraph.", this);
                     break;
-                case >= 1:
+                case > 1:
                     {
-                        foreach (StartNode startNode in startNodes.Skip(1))
-                        {
-                            infos.LogWarning($"DialogueGraph only supports one StartNode per graph. Only the first created one will be used.", startNode);
-                        }
+                        infos.LogWarning($"DialogueGraph only supports one StartNode per graph. Only the first created one will be used.", startNodes[0]);
+                        break;
+                    }
+            }
+
+            switch (endNodes.Count)
+            {
+                case 0:
+                    infos.LogError("Add a StartNode in your DialogueGraph.", this);
+                    break;
+                case > 1:
+                    {
+                        infos.LogWarning($"DialogueGraph only supports one EndNode per graph. Only the first created one will be used.", endNodes[0]);
                         break;
                     }
             }

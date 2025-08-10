@@ -7,5 +7,8 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
     {
         [SerializeReference]
         public List<DialogueRuntimeNode> Nodes = new();
+
+        [SerializeReference]
+        public Graph<DialogueRuntimeNode> Graph = new();
     }
 }
