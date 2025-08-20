@@ -1,21 +1,22 @@
-﻿using Mrjglfc.DialogueGraphSystem.Runtime;
-using System;
+﻿using System;
 using Unity.GraphToolkit.Editor;
-using UnityEngine;
 
 namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
 {
     [Serializable]
     internal class PerformActionNode : DialogueNode
     {
-        const string m_ActionType= "ActionType";
-        const string m_MoneyCount = "MoneyCount";
-        const string m_ReputationCount = "ReputationCount";
+        public const string m_MoneyCheckbox = "MoneyCheckbox";
+        public const string m_ReputationCheckbox = "ReputationCheckbox";
+
+        public const string m_MoneyCount = "MoneyCount";
+        public const string m_ReputationCount = "ReputationCount";
 
         // Called before OnDefinePorts
         protected override void OnDefineOptions(INodeOptionDefinition context)
         {
-            context.AddNodeOption(m_ActionType, defaultValue: ActionType.Money);
+            context.AddNodeOption(m_MoneyCheckbox, "Give Money", defaultValue: false);
+            context.AddNodeOption(m_ReputationCheckbox, "Give Reputation", defaultValue: false);
         }
 
         // Called after OnDefineOptions
@@ -23,28 +24,21 @@ namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
         {
             AddInputOutputExecutionPorts(context);
 
-            INodeOption actionTypeOption = GetNodeOptionByName(m_ActionType);
+            INodeOption moneyCheckboxOption = GetNodeOptionByName(m_MoneyCheckbox);
+            INodeOption reputationOption = GetNodeOptionByName(m_ReputationCheckbox);
 
-            if (actionTypeOption is null)
+            moneyCheckboxOption.TryGetValue(out bool money);
+            reputationOption.TryGetValue(out bool reputation);
+
+            if (money)
             {
-                Debug.LogError($"A NodeOption named: {m_ActionType} is null");
-                return;
+                context.AddInputPort<int>(m_MoneyCount);
             }
 
-            actionTypeOption.TryGetValue(out ActionType actionType);
-
-            switch (actionType)
+            if (reputation)
             {
-                case ActionType.Money:
-                    context.AddInputPort<int>(m_MoneyCount);
-                    break;
-
-                case ActionType.Reputation:
-                    context.AddInputPort<int>(m_ReputationCount);
-                    break;
+                context.AddInputPort<int>(m_ReputationCount);
             }
         }
-
-        
     }
 }

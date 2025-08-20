@@ -1,6 +1,7 @@
 using Mrjglfc.DialogueGraphSystem.Editor.Nodes;
 using Mrjglfc.DialogueGraphSystem.Runtime;
 using Mrjglfc.DialogueGraphSystem.Runtime.Nodes;
+using Mrjglfc.DialogueGraphSystem.Runtime.ScriptableObjects;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -91,11 +92,15 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
                     };
 
                 case SetSpeakerNode setSpeakerNodeModel:
+
+                    CharacterSO actorSO = GetNodeOptionValue<CharacterSO>(setSpeakerNodeModel.GetNodeOptionByName(SetSpeakerNode.m_Character));
+                    Sprite expression = GetNodePortValue<Sprite>(setSpeakerNodeModel.GetInputPortByName(SetSpeakerNode.m_Expression));
+                    
                     return new SetDialogueRuntimeNode
                     {
-                        ActorName = GetNodeOptionValue<string>(setSpeakerNodeModel.GetNodeOptionByName(SetSpeakerNode.m_CharacterName)),
-                        ActorSprite = GetNodeOptionValue<Sprite>(setSpeakerNodeModel.GetNodeOptionByName(SetSpeakerNode.m_CharacterSprite)),
-                        DialogueText = GetNodeOptionValue<string>(setSpeakerNodeModel.GetNodeOptionByName(SetSpeakerNode.m_Dialogue))
+                        ActorName = actorSO ? actorSO.Name: "N/A",
+                        ActorSprite = expression ? expression : null,
+                        DialogueText = GetNodePortValue<string>(setSpeakerNodeModel.GetInputPortByName(SetSpeakerNode.m_Dialogue))
                     };
 
                 case WaitForInputNode _:
@@ -111,10 +116,15 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
                         dialogueChoices[i] = choice;
                     }
 
-                    return new ChoiceRuntimeNode
-                    {
-                        dialogueOptions = dialogueChoices
-                    };
+                    return new ChoiceRuntimeNode(dialogueChoices);
+
+                case PerformActionNode performActionNode:
+                    performActionNode.GetNodeOptionByName(PerformActionNode.m_MoneyCheckbox).TryGetValue(out bool isMoneyEnabled);
+                    performActionNode.GetNodeOptionByName(PerformActionNode.m_ReputationCheckbox).TryGetValue(out bool isReputationEnabled);
+                    performActionNode.GetOutputPortByName(PerformActionNode.m_MoneyCount).TryGetValue(out int moneyAmount);
+                    performActionNode.GetOutputPortByName(PerformActionNode.m_ReputationCount).TryGetValue(out int repAmount);
+
+                    return new PerformActionRuntimeNode(isMoneyEnabled, isReputationEnabled, moneyAmount, repAmount);
 
                 case EndNode:
                     return new EndRuntimeNode();
@@ -127,6 +137,12 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
         static T GetNodeOptionValue<T>(INodeOption option)
         {
             option.TryGetValue(out T value);
+            return value;
+        }
+
+        static T GetNodePortValue<T>(IPort port)
+        {
+            port.TryGetValue(out T value);
             return value;
         }
 
