@@ -34,33 +34,58 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
         private async void Start()
         {
             // Create each executor once
-            SetBackgroundExecutor setBackgroundExecutor = new SetBackgroundExecutor();
-            SetDialogueExecutor setDialogueExecutor = new SetDialogueExecutor();
-            WaitForInputExecutor waitForInputExecutor = new WaitForInputExecutor();
+            StartExecutor startExecutor = new();
+            SetBackgroundExecutor setBackgroundExecutor = new();
+            SetDialogueExecutor setDialogueExecutor = new();
+            WaitForInputExecutor waitForInputExecutor = new();
 
             // Execute each node in the runtime graph sequentially
             foreach (DialogueRuntimeNode node in RuntimeGraph.Nodes)
             {
                 switch (node)
                 {
+                    case StartRuntimeNode startRuntimeNode:
+                        await startExecutor.ExecuteAsync(startRuntimeNode, this);
+                        break;
+
                     case SetBackgroundRuntimeNode bgNode:
                         await setBackgroundExecutor.ExecuteAsync(bgNode, this);
                         break;
+
                     case SetDialogueRuntimeNode dialogueNode:
                         await setDialogueExecutor.ExecuteAsync(dialogueNode, this);
                         break;
+
                     case SetDialogueRuntimeNodeWithPreviousActor dialogueNode:
                         await setDialogueExecutor.ExecuteAsync(dialogueNode, this);
                         break;
+
                     case WaitForInputRuntimeNode waitNode:
                         await waitForInputExecutor.ExecuteAsync(waitNode, this);
                         break;
+
                     default:
                         Debug.LogError($"No executor found for node type: {node.GetType()}");
                         break;
                 }
             }
         }
-    }
 
+        internal void SetDialoguePanel(bool isEnabled, string actorName = "")
+        {
+            if (actorName != "")
+            {
+                ActorNameText.SetText(actorName);
+            }
+
+            DialoguePanel.SetActive(isEnabled);
+        }
+
+        internal void SetActorLocation(int actorIndex, Sprite actorSprite)
+        {
+            Image img = ActorLocationList[actorIndex];
+            img.enabled = true;
+            img.sprite = actorSprite;
+        }
+    }
 }
