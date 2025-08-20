@@ -3,38 +3,25 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 
 namespace Mrjglfc.DialogueGraphSystem.Runtime
 {
-    #region GraphNode: Create Node Structure
     [Serializable]
     public class GraphNode<T>
     {
-        #region Internal Variable - generic value and List of neighbor nodes       
-        T value;
-        List<GraphNode<T>> neighbors;
-        #endregion nodes
+        private T value;
+        [SerializeReference] private List<GraphNode<T>> neighbors;
 
-        #region Constructor- initialize value and blank neighbour list
         public GraphNode(T value)
         {
             this.value = value;
             neighbors = new List<GraphNode<T>>();
         }
-        #endregion
 
-        #region Readonly Properties - value and List of neighbor nodes              
-        public T Value
-        {
-            get { return value; }
-        }
-        public IList<GraphNode<T>> Neighbors
-        {
-            get { return neighbors.AsReadOnly(); }
-        }
-        #endregion
+        public T Value => value;
+        public IList<GraphNode<T>> Neighbors => neighbors.AsReadOnly();
 
-        #region Basic Operations-AddNeighbors, RemoveNeighbors, RemoveAllNeighbors, ToString
         public bool AddNeighbors(GraphNode<T> neighbor)
         {
             if (neighbors.Contains(neighbor))
@@ -47,10 +34,9 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
                 return true;
             }
         }
-        public bool RemoveNeighbors(GraphNode<T> neighbor)
-        {
-            return neighbors.Remove(neighbor);
-        }
+
+        public bool RemoveNeighbors(GraphNode<T> neighbor) => neighbors.Remove(neighbor);
+
         public bool RemoveAllNeighbors()
         {
             for (int i = neighbors.Count; i >= 0; i--)
@@ -59,6 +45,7 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
             }
             return true;
         }
+
         public override string ToString()
         {
             StringBuilder nodeString = new();
@@ -70,51 +57,27 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
             nodeString.Append("]");
             return nodeString.ToString();
         }
-        #endregion
     }
-    #endregion
 
-    #region Graph: Search Type Enum        
     enum SearchType
     {
         DFS,
         BFS
     }
-    #endregion
 
-    #region Graph: Create Undirected  Structure, Build, Search and Get the path
     [Serializable]
     public class Graph<T>
     {
-        #region Graph: Internal Variable - list of nodes        
-        public List<GraphNode<T>> nodes = new();
-        #endregion
+        List<GraphNode<T>> nodes = new();
 
-        #region Graph: constructor
         public Graph()
         {
 
         }
-        #endregion
 
-        #region Graph: Readonly Properties - Count, Nodes        
-        public int Count
-        {
-            get
-            {
-                return nodes.Count;
-            }
-        }
-        public IList<GraphNode<T>> Nodes
-        {
-            get
-            {
-                return nodes.AsReadOnly();
-            }
-        }
-        #endregion
+        public int Count => nodes.Count;
+        public IList<GraphNode<T>> Nodes => nodes.AsReadOnly();
 
-        #region Graph: Basic operations - AddNode, AddEdge, RemoveNode, RemoveEdge, Clear, ToString, Find                 
         public bool AddNode(T value)
         {
             if (Find(value) == null)
@@ -124,12 +87,13 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
             }
 
             return false;
-
         }
+
         public bool AddEdge(T parent, T child)
         {
             GraphNode<T> parentNode = Find(parent);
             GraphNode<T> childNode = Find(child);
+
             if (parentNode == null || childNode == null)
             {
                 return false;
@@ -142,6 +106,7 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
             {
                 //for directed graph only below 1st line is required  node1->node2
                 parentNode.AddNeighbors(childNode);
+
                 //for undirected graph need below line as well
                 //node2.AddNeighbors(node1);
                 return true;
@@ -158,9 +123,11 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
             }
             return null;
         }
+
         public bool RemoveNode(T value)
         {
             GraphNode<T> removeNode = Find(value);
+
             if (removeNode == null)
             {
                 return false;
@@ -175,10 +142,12 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
                 return true;
             }
         }
+
         public bool RemoveEdge(T value1, T value2)
         {
             GraphNode<T> node1 = Find(value1);
             GraphNode<T> node2 = Find(value2);
+
             if (node1 == null || node2 == null)
             {
                 return false;
@@ -196,17 +165,20 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
                 return true;
             }
         }
+
         public void Clear()
         {
             foreach (GraphNode<T> node in nodes)
             {
                 node.RemoveAllNeighbors();
             }
+
             for (int i = nodes.Count - 1; i >= 0; i--)
             {
                 nodes.RemoveAt(i);
             }
         }
+
         public override string ToString()
         {
             StringBuilder nodeString = new();
@@ -220,44 +192,9 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
             }
             return nodeString.ToString();
         }
-        #endregion
 
-        #region Graph: Create with Edges        
-        internal static Graph<int> BuidGraph()
-        {
-            Graph<int> graph = new();
-            graph.AddNode(1);
-            graph.AddNode(4);
-            graph.AddNode(5);
-            graph.AddNode(7);
-            graph.AddNode(10);
-            graph.AddNode(11);
-            graph.AddNode(12);
-            graph.AddNode(42);
+        internal static string PrintGraph(Graph<T> graph) => graph.ToString();
 
-            graph.AddEdge(1, 5);
-            graph.AddEdge(4, 11);
-            graph.AddEdge(4, 42);
-            graph.AddEdge(5, 11);
-            graph.AddEdge(5, 12);
-            graph.AddEdge(5, 42);
-            graph.AddEdge(7, 10);
-            graph.AddEdge(7, 11);
-            graph.AddEdge(10, 11);
-            graph.AddEdge(11, 42);
-            graph.AddEdge(12, 42);
-            return graph;
-        }
-        #endregion
-
-        #region Graph: Print
-        internal static string PrintGraph(Graph<T> graph)
-        {
-            return graph.ToString();
-        }
-        #endregion
-
-        #region Graph: Search the path between nodes        
         /// <summary>
         /// search for a path from start to finish on graph using givem type 
         /// </summary>
@@ -299,7 +236,7 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
                         if (neighbor.Value == finish)
                         {
                             pathNodes.Add(neighbor, new PathNodeInfo<int>(currentNode));
-                            return "\nFinal Path is " + CovertPathToString(neighbor, pathNodes);
+                            return "\nFinal Path is " + ConvertPathToString(neighbor, pathNodes);
                         }
                         else if (pathNodes.ContainsKey(neighbor))
                         {
@@ -309,6 +246,7 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
                         else
                         {
                             pathNodes.Add(neighbor, new PathNodeInfo<int>(currentNode));
+                            
                             if (searchType == SearchType.DFS)
                             {
                                 searchList.AddFirst(neighbor);
@@ -324,10 +262,8 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
                 return "";
             }
         }
-        #endregion
 
-        #region Graph: Convert the path into string        
-        static string CovertPathToString(GraphNode<int> endNode, Dictionary<GraphNode<int>, PathNodeInfo<int>> pathNodes)
+        static string ConvertPathToString(GraphNode<int> endNode, Dictionary<GraphNode<int>, PathNodeInfo<int>> pathNodes)
         {
             //build ll for path in the correct order
             LinkedList<GraphNode<int>> path = new();
@@ -356,9 +292,7 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
             }
             return pathString.ToString();
         }
-        #endregion
 
-        #region Graph: Previous node setup
         public class PathNodeInfo<T>
         {
             //Graph: internal previous node variable
@@ -377,7 +311,5 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
                 }
             }
         }
-        #endregion
     }
-    #endregion
 }
