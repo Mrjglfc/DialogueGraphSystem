@@ -38,6 +38,7 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
             SetBackgroundExecutor setBackgroundExecutor = new();
             SetDialogueExecutor setDialogueExecutor = new();
             WaitForInputExecutor waitForInputExecutor = new();
+            PerformActionExecutor performActionExecutor = new();
 
             // Execute each node in the runtime graph sequentially
             foreach (DialogueRuntimeNode node in RuntimeGraph.Nodes)
@@ -62,6 +63,10 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
 
                     case WaitForInputRuntimeNode waitNode:
                         await waitForInputExecutor.ExecuteAsync(waitNode, this);
+                        break;
+
+                    case PerformActionRuntimeNode performActionRuntimeNode:
+                        await performActionExecutor.ExecuteAsync(performActionRuntimeNode, this);
                         break;
 
                     default:

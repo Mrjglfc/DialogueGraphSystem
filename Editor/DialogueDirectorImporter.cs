@@ -3,7 +3,6 @@ using Mrjglfc.DialogueGraphSystem.Runtime;
 using Mrjglfc.DialogueGraphSystem.Runtime.Nodes;
 using Mrjglfc.DialogueGraphSystem.Runtime.ScriptableObjects;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.GraphToolkit.Editor;
@@ -118,13 +117,17 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
 
                     return new ChoiceRuntimeNode(dialogueChoices);
 
-                case PerformActionNode performActionNode:
-                    performActionNode.GetNodeOptionByName(PerformActionNode.m_MoneyCheckbox).TryGetValue(out bool isMoneyEnabled);
-                    performActionNode.GetNodeOptionByName(PerformActionNode.m_ReputationCheckbox).TryGetValue(out bool isReputationEnabled);
-                    performActionNode.GetOutputPortByName(PerformActionNode.m_MoneyCount).TryGetValue(out int moneyAmount);
-                    performActionNode.GetOutputPortByName(PerformActionNode.m_ReputationCount).TryGetValue(out int repAmount);
+                case PerformActionContextNode performActionContextNode:
+                    int blockCount = performActionContextNode.blockCount;
+                    List<DialogueRuntimeNode> runtimeBlockNodes = new();
+                    BlockNode[] editorBlockNodes = performActionContextNode.blockNodes.ToArray();
 
-                    return new PerformActionRuntimeNode(isMoneyEnabled, isReputationEnabled, moneyAmount, repAmount);
+                    for (int i = 0; i < blockCount; i++)
+                    {
+                        runtimeBlockNodes[i] = TranslateNodeModelToRuntimeNodes(editorBlockNodes[i]);
+                    }
+
+                    return new PerformActionRuntimeNode(runtimeBlockNodes.ToList());
 
                 case EndNode:
                     return new EndRuntimeNode();
