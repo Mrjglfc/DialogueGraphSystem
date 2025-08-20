@@ -1,29 +1,30 @@
+using Mrjglfc.DialogueGraphSystem.Runtime;
+using Mrjglfc.DialogueGraphSystem.Runtime.ScriptableObjects;
 using System;
 using Unity.GraphToolkit.Editor;
 using UnityEngine;
-using Mrjglfc.DialogueGraphSystem.Runtime;
 
 namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
 {
     [Serializable]
     internal class SetSpeakerNode : DialogueNode
     {
-        public const string m_CharacterName = "CharacterName";
-        public const string m_CharacterSprite = "CharacterSprite";
+        public const string m_Character = "Character";
         public const string m_SpriteLocation = "SpriteLocation";
         public const string m_Dialogue = "Dialogue";
+        public const string m_Expression = "Expression";
 
         protected override void OnDefineOptions(INodeOptionDefinition context)
         {
-            context.AddNodeOption<CharacterName>(m_CharacterName, "Character Name");
-            context.AddNodeOption<Sprite>(m_CharacterSprite, "Character Sprite");
+            context.AddNodeOption<CharacterSO>(m_Character, "Character");
             context.AddNodeOption<CharacterSpritePosition>(m_SpriteLocation, "Sprite Location");
-            context.AddNodeOption<string>(m_Dialogue, "Dialogue");
         }
 
         protected override void OnDefinePorts(IPortDefinitionContext context)
         {
             AddInputOutputExecutionPorts(context);
+            context.AddInputPort<string>(m_Dialogue);
+            context.AddInputPort<Sprite>(m_Expression);
         }
     }
 }

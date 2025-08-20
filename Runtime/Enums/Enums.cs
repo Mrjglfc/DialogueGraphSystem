@@ -15,6 +15,7 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
     public enum ActionType
     {
         Money,
-        Reputation
+        Reputation,
+        CompleteQuest
     }
 }

@@ -14,21 +14,18 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime.Nodes
         {
             if (string.IsNullOrEmpty(runtimeNode.DialogueText))
             {
-                ctx.DialoguePanel.SetActive(false);
+                ctx.SetDialoguePanel(false);
                 return;
             }
 
-            ctx.DialoguePanel.SetActive(true);
-            ctx.ActorNameText.text = runtimeNode.ActorName;
+            ctx.SetDialoguePanel(true, runtimeNode.ActorName);
 
             foreach (Image location in ctx.ActorLocationList)
                 location.enabled = false;
 
             if (runtimeNode.ActorSprite != null)
             {
-                var img = ctx.ActorLocationList[runtimeNode.LocationIndex];
-                img.enabled = true;
-                img.sprite = runtimeNode.ActorSprite;
+                ctx.SetActorLocation(runtimeNode.LocationIndex, runtimeNode.ActorSprite);
             }
 
             await TypeTextWithSkipAsync(runtimeNode.DialogueText, ctx);
@@ -42,11 +39,11 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime.Nodes
         {
             if (string.IsNullOrEmpty(runtimeNode.DialogueText))
             {
-                ctx.DialoguePanel.SetActive(false);
+                ctx.SetDialoguePanel(false);
                 return;
             }
 
-            ctx.DialoguePanel.SetActive(true);
+            ctx.SetDialoguePanel(true);
 
             await TypeTextWithSkipAsync(runtimeNode.DialogueText, ctx);
         }
@@ -61,19 +58,18 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime.Nodes
         /// </remarks>
         static async Task TypeTextWithSkipAsync(string dialogueText, DialogueDirector ctx)
         {
-            var label = ctx.DialogueText;
-            var delayPerCharSeconds = ctx.GlobalTextDelayPerCharacter;
-            var inputProvider = ctx.InputProvider;
+            TMPro.TextMeshProUGUI label = ctx.DialogueText;
+            float delayPerCharSeconds = ctx.GlobalTextDelayPerCharacter;
 
-            label.text = "";
-            var builder = new StringBuilder();
+            label.SetText("");
+            StringBuilder builder = new();
 
-            var insideRichTag = false;
+            bool insideRichTag = false;
 
             // Start listening for skip input
-            var skipInputDetected = inputProvider.InputDetected();
+            Task skipInputDetected = ctx.InputProvider.InputDetected();
 
-            foreach (var c in dialogueText)
+            foreach (char c in dialogueText)
             {
                 // Handle rich text tags (e.g., <b>, </i>)
                 if (c == '<')
@@ -87,14 +83,14 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime.Nodes
                 // Skip delay if rich text
                 if (insideRichTag || char.IsWhiteSpace(c)) continue;
 
-                label.text = builder.ToString();
+                label.SetText(builder.ToString());
 
                 float timer = 0f;
                 while (timer < delayPerCharSeconds)
                 {
                     if (skipInputDetected.IsCompleted)
                     {
-                        label.text = dialogueText;
+                        label.SetText(dialogueText);
                         return;
                     }
                     timer += Time.deltaTime;
@@ -102,7 +98,7 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime.Nodes
                 }
             }
 
-            label.text = dialogueText;
+            label.SetText(dialogueText);
         }
     }
 }
