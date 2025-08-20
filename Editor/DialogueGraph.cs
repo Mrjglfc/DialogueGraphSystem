@@ -1,6 +1,5 @@
 using Mrjglfc.DialogueGraphSystem.Editor.Nodes;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Unity.GraphToolkit.Editor;
 using UnityEditor;
@@ -23,37 +22,41 @@ namespace Mrjglfc.DialogueGraphSystem.Editor
         {
             base.OnGraphChanged(infos);
 
-            CheckGraphErrors(infos);
+            DetectStartNodeErrors(infos);
+            DetectEndNodeErrors(infos);
         }
 
-        void CheckGraphErrors(GraphLogger infos)
+        private void DetectStartNodeErrors(GraphLogger infos)
         {
-            List<StartNode> startNodes = GetNodes().OfType<StartNode>().ToList();
-            List<EndNode> endNodes = GetNodes().OfType<EndNode>().ToList();
-
-            switch (startNodes.Count)
+            int startNodesCount = GetNodes().OfType<StartNode>().Count();
+            switch (startNodesCount)
             {
                 case 0:
                     infos.LogError("Add a StartNode in your DialogueGraph.", this);
                     break;
                 case > 1:
                     {
-                        infos.LogWarning($"DialogueGraph only supports one StartNode per graph. Only the first created one will be used.", startNodes[0]);
-                        break;
-                    }
-            }
-
-            switch (endNodes.Count)
-            {
-                case 0:
-                    infos.LogError("Add a StartNode in your DialogueGraph.", this);
-                    break;
-                case > 1:
-                    {
-                        infos.LogWarning($"DialogueGraph only supports one EndNode per graph. Only the first created one will be used.", endNodes[0]);
+                        infos.LogWarning($"DialogueGraph only supports one StartNode per graph. Only the first created one will be used.");
                         break;
                     }
             }
         }
+
+        private void DetectEndNodeErrors(GraphLogger infos)
+        {
+            int endNodesCount = GetNodes().OfType<EndNode>().Count();
+            switch (endNodesCount)
+            {
+                case 0:
+                    infos.LogError("Add a EndNode in your DialogueGraph.", this);
+                    break;
+                case > 1:
+                    {
+                        infos.LogWarning($"DialogueGraph only supports one EndNode per graph. Only the first created one will be used.");
+                        break;
+                    }
+            }
+        }
+
     }
 }
