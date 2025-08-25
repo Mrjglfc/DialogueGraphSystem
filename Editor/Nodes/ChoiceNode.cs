@@ -1,6 +1,5 @@
 using System;
 using Unity.GraphToolkit.Editor;
-using UnityEngine;
 
 namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
 {
@@ -9,9 +8,12 @@ namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
     {
         internal const string m_ChoiceCount = "ChoiceCount";
 
-        protected override void OnDefineOptions(INodeOptionDefinition context)
+        protected override void OnDefineOptions(IOptionDefinitionContext context)
         {
-            context.AddNodeOption(m_ChoiceCount, "Port Count", defaultValue: 2, attributes: new[] { new DelayedAttribute() });
+            context.AddOption<int>(m_ChoiceCount)
+                .WithDisplayName("Port Count")
+                .WithDefaultValue(2)
+                .Delayed();
         }
 
         protected override void OnDefinePorts(IPortDefinitionContext context)

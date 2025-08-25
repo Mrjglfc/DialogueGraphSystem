@@ -1,7 +1,6 @@
 using Mrjglfc.DialogueGraphSystem.Runtime;
 using Mrjglfc.DialogueGraphSystem.Runtime.ScriptableObjects;
 using System;
-using Unity.GraphToolkit.Editor;
 using UnityEngine;
 
 namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
@@ -14,10 +13,13 @@ namespace Mrjglfc.DialogueGraphSystem.Editor.Nodes
         public const string m_Dialogue = "Dialogue";
         public const string m_Expression = "Expression";
 
-        protected override void OnDefineOptions(INodeOptionDefinition context)
+        protected override void OnDefineOptions(IOptionDefinitionContext context)
         {
-            context.AddNodeOption<CharacterSO>(m_Character, "Character");
-            context.AddNodeOption<CharacterSpritePosition>(m_SpriteLocation, "Sprite Location");
+            context.AddOption<CharacterSO>(m_Character)
+                .WithDisplayName("Character");
+            
+            context.AddOption<CharacterSpritePosition>(m_SpriteLocation)
+                .WithDisplayName("Sprite Location");
         }
 
         protected override void OnDefinePorts(IPortDefinitionContext context)
