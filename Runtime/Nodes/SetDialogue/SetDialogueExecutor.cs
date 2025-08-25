@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 namespace Mrjglfc.DialogueGraphSystem.Runtime.Nodes
 {
+    /// <summary>
+    /// The executor for the <see cref="SetDialogueRuntimeNode"/> and <see cref="SetDialogueRuntimeNodeWithPreviousActor"/> nodes.
+    /// </summary>
     public class SetDialogueExecutor : IDialogueNodeExecutor<SetDialogueRuntimeNode>, IDialogueNodeExecutor<SetDialogueRuntimeNodeWithPreviousActor>
     {
         /// <summary>

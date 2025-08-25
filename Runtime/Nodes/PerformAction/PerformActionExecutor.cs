@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Mrjglfc.DialogueGraphSystem.Runtime.Nodes
 {
@@ -7,14 +8,27 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime.Nodes
     /// </summary>
     public class PerformActionExecutor : IDialogueNodeExecutor<PerformActionRuntimeNode>
     {
-        /// <summary>
-        /// Asynchronously waits for user input to be detected before proceeding with the execution of the visual novel graph.
-        /// </summary>
+        readonly GiveMoneyExecutor moneyExecutor = new();
+        readonly GiveReputationExecutor reputationExecutor = new();
+
         public async Task ExecuteAsync(PerformActionRuntimeNode performActionRuntimeNode, DialogueDirector ctx)
         {
             foreach(DialogueRuntimeNode node in performActionRuntimeNode.blockNodes)
             {
-                //TODO: WE need to get the executor of the node somehow
+                switch(node)
+                {
+                    case GiveMoneyRuntimeBlockNode giveMoneyRuntimeBlockNode:
+                        await moneyExecutor.ExecuteAsync(giveMoneyRuntimeBlockNode, ctx);
+                        break;
+
+                    case GiveReputationRuntimeBlockNode giveReputationRuntimeBlockNode:
+                        await reputationExecutor.ExecuteAsync(giveReputationRuntimeBlockNode, ctx);
+                        break;
+
+                    default:
+                        Debug.LogError($"No ContextNode executor found for node type: {node.GetType()}");
+                        break;
+                }
             }
             await ctx.InputProvider.InputDetected();
         }

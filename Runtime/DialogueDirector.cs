@@ -31,15 +31,14 @@ namespace Mrjglfc.DialogueGraphSystem.Runtime
         public MonoBehaviour InputComponent;
         public IDialogueInputProvider InputProvider => InputComponent as IDialogueInputProvider;
 
+        readonly StartExecutor startExecutor = new();
+        readonly SetBackgroundExecutor setBackgroundExecutor = new();
+        readonly SetDialogueExecutor setDialogueExecutor = new();
+        readonly WaitForInputExecutor waitForInputExecutor = new();
+        readonly PerformActionExecutor performActionExecutor = new();
+
         private async void Start()
         {
-            // Create each executor once
-            StartExecutor startExecutor = new();
-            SetBackgroundExecutor setBackgroundExecutor = new();
-            SetDialogueExecutor setDialogueExecutor = new();
-            WaitForInputExecutor waitForInputExecutor = new();
-            PerformActionExecutor performActionExecutor = new();
-
             // Execute each node in the runtime graph sequentially
             foreach (DialogueRuntimeNode node in RuntimeGraph.Nodes)
             {
